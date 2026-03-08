@@ -7,7 +7,7 @@ Distributed log aggregation and real-time anomaly detection system.
 Five microservices communicating over Kafka and REST:
 
 - **ingestion-service** — FastAPI REST API that accepts structured JSON log events and publishes them to Kafka
-- **storage-service** — Kafka consumer that persists logs to ClickHouse and exposes a Query API
+- **storage-service** — Kafka consumer that persists logs to SQLite
 - **anomaly-engine** — Streaming anomaly detection using rolling Z-score statistics
 - **alert-dispatcher** — Rule-based alert evaluation and Slack/email notification dispatch
 - **dashboard** — React frontend with live log stream, anomaly timeline, and alert history
@@ -16,18 +16,17 @@ Five microservices communicating over Kafka and REST:
 
 - Python / FastAPI
 - Apache Kafka
-- ClickHouse (columnar log storage)
-- Redis (rolling window buffer)
-- React
+- SQLite (log storage)
+- React (planned)
 - Docker Compose
 
 ## Getting Started
 
 ```bash
-docker compose up
+docker-compose up --build zookeeper kafka ingestion-service storage-service
 ```
 
-> Full service implementation in progress. See milestone chart in project checkpoint report.
+See [docs/demo.md](docs/demo.md) for a full end-to-end demo walkthrough.
 
 ## Log Schema
 
