@@ -15,23 +15,12 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
-      - "9092:9092"
-
-  redis:
-    image: redis:7.2-alpine
-    ports:
-      - "6379:6379"
-
-  clickhouse:
-    image: clickhouse/clickhouse-server:23.8
-    ports:
-      - "8123:8123"
-      - "9000:9000"
-    volumes:
-      - clickhouse_data:/var/lib/clickhouse
+      - "29092:29092"
 
   ingestion-service:
     build: ./ingestion-service
@@ -47,24 +36,21 @@ services:
     build: ./storage-service
     depends_on:
       - kafka
-      - clickhouse
-      - redis
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_TOPIC: logs.raw
-      CLICKHOUSE_HOST: clickhouse
-      REDIS_HOST: redis
+      DB_PATH: /data/logs.db
+    volumes:
+      - sqlite_data:/data
 
   anomaly-engine:
     build: ./anomaly-engine
     depends_on:
       - kafka
-      - redis
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_TOPIC: logs.raw
       ANOMALY_TOPIC: logs.anomalies
-      REDIS_HOST: redis
 
   alert-dispatcher:
     build: ./alert-dispatcher
@@ -78,8 +64,6 @@ services:
     build: ./dashboard
     ports:
       - "3000:3000"
-    depends_on:
-      - storage-service
 
 volumes:
-  clickhouse_data:
+  sqlite_data:

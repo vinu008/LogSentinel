@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+import producer
 
 app = FastAPI(title="LogSentinel Ingestion Service")
 
@@ -9,7 +10,7 @@ app = FastAPI(title="LogSentinel Ingestion Service")
 class LogEvent(BaseModel):
     timestamp: datetime
     service: str
-    level: str  # DEBUG, INFO, WARN, ERROR, FATAL
+    level: str
     message: str
     metadata: Optional[dict] = None
 
@@ -21,11 +22,18 @@ def health():
 
 @app.post("/ingest")
 def ingest(event: LogEvent):
-    # TODO: publish to Kafka
-    return {"status": "accepted"}
+    try:
+        producer.publish(event.model_dump(mode="json"))
+        return {"status": "accepted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/ingest/batch")
 def ingest_batch(events: list[LogEvent]):
-    # TODO: publish batch to Kafka
-    return {"status": "accepted", "count": len(events)}
+    try:
+        for event in events:
+            producer.publish(event.model_dump(mode="json"))
+        return {"status": "accepted", "count": len(events)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
