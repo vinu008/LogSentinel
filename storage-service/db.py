@@ -40,3 +40,19 @@ def insert_log(event: dict):
     )
     conn.commit()
     conn.close()
+
+def query_logs(service: str = None, level: str = None, limit: int = 100):
+    conn = get_conn()
+    query = "SELECT id, timestamp, service, level, message, metadata FROM logs WHERE 1=1"
+    params = []
+    if service:
+        query += " AND service = ?"
+        params.append(service)
+    if level:
+        query += " AND level = ?"
+        params.append(level)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
