@@ -9,10 +9,12 @@ events, stores them, and detects anomalous patterns using rolling Z-score statis
 LogSentinel/
 ├── ingestion-service/   # FastAPI app — accepts log events, publishes to Kafka
 ├── storage-service/     # Kafka consumer — writes logs to SQLite
-├── anomaly-engine/      # Rolling Z-score anomaly detection (in progress)
-├── alert-dispatcher/    # Slack/email alerts (planned)
-├── dashboard/           # React frontend (planned)
+├── anomaly-engine/      # Rolling Z-score anomaly detection
+├── alert-dispatcher/    # Slack/email alerts
+├── dashboard/           # React frontend with live log stream and anomaly panel
+├── load-generator/      # Traffic simulator and benchmark suite
 ├── docs/demo.md         # End-to-end demo walkthrough
+├── docs/bench_results.md # Benchmark results
 └── docker-compose.yml
 ```
 
@@ -50,6 +52,28 @@ curl -X POST http://localhost:8000/ingest \
 |---------|--------|
 | ingestion-service | Complete |
 | storage-service | Complete |
-| anomaly-engine | In progress |
-| alert-dispatcher | Planned |
-| dashboard | Planned |
+| anomaly-engine | Complete |
+| alert-dispatcher | Complete |
+| dashboard | Complete |
+| load-generator | Complete |
+
+## Running Benchmarks
+
+```bash
+# Make sure docker compose is up first
+docker-compose up --build
+
+# Run the benchmark suite
+cd load-generator
+python benchmark.py
+```
+
+Results will print to stdout. Save them to docs/bench_results.md.
+
+## Demo Sequence (for presentations)
+
+1. `docker-compose up --build`
+2. Open dashboard at http://localhost:3000
+3. In a separate terminal: `python load-generator/generate.py --rate 10 --anomaly-service auth-service --anomaly-duration 60`
+4. Watch logs populate in the dashboard
+5. After 30 seconds, anomaly panel activates and Slack alert fires
